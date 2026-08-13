@@ -1,5 +1,5 @@
 import express from "express";
-import router from "../routes/reminderRoutes.js";
+import router from "./routes/reminderRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
