@@ -4,14 +4,16 @@ import { ReminderService } from "../services/reminderServices.js";
 export const ReminderController = {
   async getAllReminders(req, res) {
     try {
-      const { completed, sort, limit, offset } = req.query;
+      const { completed, overdue, sort, limit, offset } = req.query;
+      const userId = req.user?.id || 1; // Replace with actual auth later
       const filters = {
         completed: completed === undefined ? undefined : completed === "true",
+        overdue: overdue === "true",
         sort,
         limit: limit ? parseInt(limit, 10) : 20,
         offset: offset ? parseInt(offset, 10) : 0,
       };
-      const reminders = await ReminderService.getAllReminders(filters);
+      const reminders = await ReminderService.getAllReminders(userId, filters);
       res.status(200).json(reminders);
     } catch (error) {
       res.status(500).json({ message: "Internal Server Error" });

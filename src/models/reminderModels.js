@@ -1,55 +1,68 @@
 // src/models/reminderModel.js
-let reminders = []; // temporary in-memory "database"
-let nextId = 1;
+import db from '../config/db.js';
 
 export const ReminderModel = {
-  async getAll({ completed, sort, limit, offset } = {}) {
-    let result = [...reminders];
+  async getAll(userId, { completed, overdue, sort, limit = 20, offset = 0 } = {}) {
+    const conditions = ['user_id = $1'];
+    const values = [userId];
 
-    if (completed != undefined) {
-      result = result.filter((r) => r.completed === completed);
+    if (completed !== undefined) {
+      values.push(completed);
+      conditions.push(`completed = $${values.length}`);
     }
 
-    if (sort === "-createdAt") {
-      result = result.sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-      );
-    } else if (sort === "createdAt") {
-      result = result.sort(
-        (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
-      );
+    if (overdue) {
+      // due_date exists on the table since Module 5 — this is its first real use
+      conditions.push('due_date < NOW() AND completed = FALSE');
     }
 
-    return result.slice(offset, offset + limit);
+    const orderBy = sort === 'createdAt' ? 'created_at ASC' : 'created_at DESC';
+
+    values.push(limit, offset);
+    const query = `
+      SELECT * FROM reminders
+      WHERE ${conditions.join(' AND ')}
+      ORDER BY ${orderBy}
+      LIMIT $${values.length - 1} OFFSET $${values.length}
+    `;
+
+    const result = await db.query(query, values);
+    return result.rows;
   },
 
   async findById(id) {
-    return reminders.find((r) => r.id === id);
+    const result = await db.query('SELECT * FROM reminders WHERE id = $1', [id]);
+    return result.rows[0];
   },
 
-  async create({ title, notes, userId }) {
-    const reminder = {
-      id: nextId++,
-      title,
-      notes: notes ?? null,
-      completed: false,
-      userId,
-      createdAt: new Date().toISOString(),
-    };
-    reminders.push(reminder);
-    return reminder;
+  async create({ title, notes, dueDate, userId }) {
+    const result = await db.query(
+      `INSERT INTO reminders (title, notes, due_date, user_id)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [title, notes, dueDate, userId]
+    );
+    return result.rows[0];
   },
 
   async update(id, newValues) {
-    const reminder = reminders.find((r) => r.id === id);
-    if (!reminder) return null;
-    Object.assign(reminder, newValues);
-    return reminder;
+    const fields = Object.keys(newValues);
+    const setClauses = fields.map((key, index) => `${key} = $${index + 1}`);
+    const values = Object.values(newValues);
+    values.push(id); // id goes last, for the WHERE clause
+
+    const query = `
+      UPDATE reminders
+      SET ${setClauses.join(', ')}
+      WHERE id = $${values.length}
+      RETURNING *
+    `;
+    const result = await db.query(query, values);
+    return result.rows[0];
   },
 
   async delete(id) {
-    const lengthBefore = reminders.length;
-    reminders = reminders.filter((r) => r.id !== id);
-    return lengthBefore - reminders.length; // rows deleted (0 or 1)
+    const result = await db.query('DELETE FROM reminders WHERE id = $1', [id]);
+    return result.rowCount;
   },
 };
