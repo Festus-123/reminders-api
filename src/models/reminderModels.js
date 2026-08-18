@@ -1,10 +1,13 @@
 // src/models/reminderModel.js
-import db from '../config/db.js';
+import db from "../config/db.js";
 
 export const ReminderModel = {
-  async getAll(userId, { completed, overdue, sort, limit = 20, offset = 0 } = {}) {
-    const conditions = ['user_id = $1'];
-    const values = [userId];
+  async getAll(
+    userId,
+    { completed, overdue, sort, limit = 20, offset = 0 } = {},
+  ) {
+    const conditions = [];
+    const values = [];
 
     if (completed !== undefined) {
       values.push(completed);
@@ -13,16 +16,18 @@ export const ReminderModel = {
 
     if (overdue) {
       // due_date exists on the table since Module 5 — this is its first real use
-      conditions.push('due_date < NOW() AND completed = FALSE');
+      conditions.push("due_date < NOW() AND completed = FALSE");
     }
 
-    const orderBy = sort === 'createdAt' ? 'created_at ASC' : 'created_at DESC';
+    const orderBy = sort === "createdAt" ? "created_at ASC" : "created_at DESC";
 
     values.push(limit, offset);
+    const whereClause =
+      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
     const query = `
       SELECT * FROM reminders
-      WHERE ${conditions.join(' AND ')}
-      ORDER BY ${orderBy}
+      ${whereClause}
+        ORDER BY ${orderBy}
       LIMIT $${values.length - 1} OFFSET $${values.length}
     `;
 
@@ -31,7 +36,9 @@ export const ReminderModel = {
   },
 
   async findById(id) {
-    const result = await db.query('SELECT * FROM reminders WHERE id = $1', [id]);
+    const result = await db.query("SELECT * FROM reminders WHERE id = $1", [
+      id,
+    ]);
     return result.rows[0];
   },
 
@@ -40,7 +47,7 @@ export const ReminderModel = {
       `INSERT INTO reminders (title, notes, due_date, user_id)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [title, notes, dueDate, userId]
+      [title, notes, dueDate, userId],
     );
     return result.rows[0];
   },
@@ -53,7 +60,7 @@ export const ReminderModel = {
 
     const query = `
       UPDATE reminders
-      SET ${setClauses.join(', ')}
+      SET ${setClauses.join(", ")}
       WHERE id = $${values.length}
       RETURNING *
     `;
@@ -62,7 +69,7 @@ export const ReminderModel = {
   },
 
   async delete(id) {
-    const result = await db.query('DELETE FROM reminders WHERE id = $1', [id]);
+    const result = await db.query("DELETE FROM reminders WHERE id = $1", [id]);
     return result.rowCount;
   },
 };
