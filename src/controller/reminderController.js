@@ -5,7 +5,7 @@ export const ReminderController = {
   async getAllReminders(req, res) {
     try {
       const { completed, overdue, sort, limit, offset } = req.query;
-      const userId = req.user?.id || 1; // Replace with actual auth later
+      const userId = req.user.id || 1; // Replace with actual auth later
       const filters = {
         completed: completed === undefined ? undefined : completed === "true",
         overdue: overdue === "true",
@@ -23,7 +23,11 @@ export const ReminderController = {
   async getReminderById(req, res) {
     try {
       const reminderId = parseInt(req.params.id, 10);
-      const reminder = await ReminderService.getReminderById(reminderId);
+      const userId = req.user?.id || 1; // Replace with actual auth later
+      const reminder = await ReminderService.getReminderById(
+        reminderId,
+        userId,
+      );
       res.status(200).json(reminder);
     } catch (error) {
       res.status(404).json({ message: error.message });
@@ -32,7 +36,11 @@ export const ReminderController = {
 
   async createReminder(req, res) {
     try {
-      const newReminder = await ReminderService.createReminder(req.body);
+      const userId = req.user.id || 1; // Replace with actual auth later
+      const newReminder = await ReminderService.createReminder({
+        ...req.body,
+        userId: userId,
+      });
       res.status(201).json(newReminder);
     } catch (error) {
       res.status(500).json({ message: "Internal Server Error" });
@@ -42,10 +50,8 @@ export const ReminderController = {
   async updateReminder(req, res) {
     try {
       const reminderId = parseInt(req.params.id, 10);
-      const updated = await ReminderService.updateReminder(
-        reminderId,
-        req.body,
-      );
+      const userId = req.user?.id || 1; // Replace with actual auth later
+      const updated = await ReminderService.updateReminder(reminderId, req.body, userId);
       res.status(200).json(updated);
     } catch (error) {
       res.status(404).json({ message: error.message });

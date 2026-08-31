@@ -6,8 +6,8 @@ export const ReminderModel = {
     userId,
     { completed, overdue, sort, limit = 20, offset = 0 } = {},
   ) {
-    const conditions = [];
-    const values = [];
+    const conditions = [" user_id = $1"];
+    const values = [userId];
 
     if (completed !== undefined) {
       values.push(completed);
@@ -35,9 +35,10 @@ export const ReminderModel = {
     return result.rows;
   },
 
-  async findById(id) {
-    const result = await db.query("SELECT * FROM reminders WHERE id = $1", [
+  async findById(id, userId) {
+    const result = await db.query("SELECT * FROM reminders WHERE id = $1 AND user_id = $2", [
       id,
+      userId
     ]);
     return result.rows[0];
   },

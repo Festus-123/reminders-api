@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { ReminderController } from "../controller/reminderController.js";
+import { authMiddleware } from "../middlewares/authmiddleware.js";
 
 const router = Router()
+
+router.use(authMiddleware);
 
 router.get("/", ReminderController.getAllReminders)
 router.get("/:id", ReminderController.getReminderById)
