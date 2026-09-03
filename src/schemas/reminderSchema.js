@@ -1,15 +1,15 @@
-// src/schemas/reminderSchema.js
+﻿// src/schemas/reminderSchema.js
 import { z } from 'zod';
 
 // The full shape of a reminder as stored in the database
 export const reminderSchema = z.object({
   id: z.number(),
   title: z.string().min(1, 'Title should be longer').max(255),
-  notes: z.string().optional(),
-  dueDate: z.string().datetime().optional(),
+  notes: z.string().nullable().optional(),
+  dueDate: z.string().datetime({ offset: true }).nullable().optional(),
   completed: z.boolean().optional().default(false),
   userId: z.number(),
-  createdAt: z.string().datetime(),
+  createdAt: z.union([z.string().datetime({ offset: true }), z.date(), z.string()]),
 });
 
 // What a client is allowed to send when CREATING a reminder
@@ -26,6 +26,6 @@ export const createReminderSchema = reminderSchema.omit({
 export const updateReminderSchema = z.object({
   title: z.string().min(1, 'Title should be longer').max(255).optional(),
   notes: z.string().nullable().optional(),
-  dueDate: z.string().datetime().nullable().optional(),
+  dueDate: z.string().datetime({ offset: true }).nullable().optional(),
   completed: z.boolean().optional(),
 });

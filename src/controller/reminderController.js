@@ -1,11 +1,11 @@
-// src/controllers/reminderController.js
+﻿// src/controllers/reminderController.js
 import { ReminderService } from "../services/reminderServices.js";
 
 export const ReminderController = {
-  async getAllReminders(req, res) {
+  async getAllReminders(req, res, next) {
     try {
       const { completed, overdue, sort, limit, offset } = req.query;
-      const userId = req.user.id || 1; // Replace with actual auth later
+      const userId = req.user.id;
       const filters = {
         completed: completed === undefined ? undefined : completed === "true",
         overdue: overdue === "true",
@@ -16,55 +16,55 @@ export const ReminderController = {
       const reminders = await ReminderService.getAllReminders(userId, filters);
       res.status(200).json(reminders);
     } catch (error) {
-      res.status(500).json({ message: "Internal Server Error" });
+      next(error);
     }
   },
 
   async getReminderById(req, res, next) {
     try {
       const reminderId = parseInt(req.params.id, 10);
-      const userId = req.user?.id || 1; // Replace with actual auth later
-      const reminder = await ReminderService.getReminderById(
-        reminderId,
-        userId,
-      );
+      const userId = req.user.id;
+      const reminder = await ReminderService.getReminderById(reminderId, userId);
       res.status(200).json(reminder);
     } catch (error) {
       next(error);
     }
   },
 
-  async createReminder(req, res) {
+  async createReminder(req, res, next) {
     try {
-      const userId = req.user.id || 1; // Replace with actual auth later
+      const userId = req.user.id;
       const newReminder = await ReminderService.createReminder({
         ...req.body,
-        userId: userId,
+        userId,
       });
       res.status(201).json(newReminder);
     } catch (error) {
-      res.status(500).json({ message: "Internal Server Error" });
+      next(error);
     }
   },
 
-  async updateReminder(req, res) {
+  async updateReminder(req, res, next) {
     try {
       const reminderId = parseInt(req.params.id, 10);
-      const userId = req.user?.id || 1; // Replace with actual auth later
+      const userId = req.user.id;
       const updated = await ReminderService.updateReminder(reminderId, req.body, userId);
       res.status(200).json(updated);
     } catch (error) {
-      res.status(404).json({ message: error.message });
+      next(error);
     }
   },
 
-  async deleteReminder(req, res) {
+  async deleteReminder(req, res, next) {
     try {
       const reminderId = parseInt(req.params.id, 10);
-      const result = await ReminderService.deleteReminder(reminderId);
+      const userId = req.user.id;
+      const result = await ReminderService.deleteReminder(reminderId, userId);
       res.status(200).json(result);
     } catch (error) {
-      res.status(404).json({ message: error.message });
+      next(error);
     }
   },
 };
+
+export default ReminderController;

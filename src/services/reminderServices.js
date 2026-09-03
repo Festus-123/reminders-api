@@ -1,53 +1,58 @@
-// src/services/reminderService.js
-
-import { ReminderModel } from "../models/reminderModels.js";
+﻿// src/services/reminderServices.js
+import { ReminderModel, formatReminder } from "../models/reminderModels.js";
 import { CustomError } from "../utils/CustomError.js";
 import ERROR_MESSAGES from "../constants/errorMessages.js";
 
-
 export const ReminderService = {
   async getAllReminders(userId, filters) {
-    // Fetch All Reminders
     return ReminderModel.getAll(userId, filters);
   },
 
   async getReminderById(reminderId, userId) {
-    const reminder = await ReminderModel.findById(reminderId, userId);
+    const reminder = await ReminderModel.findById(reminderId);
     if (!reminder) throw new CustomError(ERROR_MESSAGES.REMINDER_NOT_FOUND, 404);
-    if(reminder.user_id !== userId) throw new CustomError(ERROR_MESSAGES.FORBIDDEN, 403)
-    return reminder;
+    if (reminder.user_id !== userId) throw new CustomError(ERROR_MESSAGES.FORBIDDEN, 403);
+    return formatReminder(reminder);
   },
 
   async createReminder(newReminder) {
     const { title, notes, dueDate, userId } = newReminder;
     const sanitized = {
       title: title?.trim(),
-      notes: notes?.trim(),
-      dueDate: dueDate,
-      userId: userId,
+      notes: notes?.trim() || null,
+      dueDate: dueDate || null,
+      userId,
     };
     return ReminderModel.create(sanitized);
   },
 
   async updateReminder(reminderId, newValues, userId) {
-    const reminder = await ReminderModel.findById(reminderId, userId);
-    if (!reminder) throw new Error("Reminder not found");
-    if (reminder.user_id !== userId) throw new CustomError(ERROR_MESSAGES.FORBIDDEN, 403)
-    const updated = await ReminderModel.update(reminderId, newValues);
-    if (!updated) throw new Error("Reminder not found");
+    const reminder = await ReminderModel.findById(reminderId);
+    if (!reminder) throw new CustomError(ERROR_MESSAGES.REMINDER_NOT_FOUND, 404);
+    if (reminder.user_id !== userId) throw new CustomError(ERROR_MESSAGES.FORBIDDEN, 403);
+
+    const sanitized = { ...newValues };
+    if (typeof sanitized.title === 'string') {
+      sanitized.title = sanitized.title.trim();
+    }
+    if (sanitized.notes !== undefined && typeof sanitized.notes === 'string') {
+      sanitized.notes = sanitized.notes.trim() || null;
+    }
+
+    const updated = await ReminderModel.update(reminderId, sanitized);
     return updated;
   },
 
-  async deleteReminder(reminderId) {
+  async deleteReminder(reminderId, userId) {
     const reminder = await ReminderModel.findById(reminderId);
-    if (!reminder) throw new Error("Reminder not found");
+    if (!reminder) throw new CustomError(ERROR_MESSAGES.REMINDER_NOT_FOUND, 404);
     if (reminder.user_id !== userId) {
-      const error = new Error("You are not authorized to delete this reminder");
-      error.statusCode = 403;
-      throw error;
+      throw new CustomError(ERROR_MESSAGES.FORBIDDEN, 403);
     }
     const rowsDeleted = await ReminderModel.delete(reminderId);
-    if (rowsDeleted === 0) throw new Error("Reminder not found");
+    if (rowsDeleted === 0) throw new CustomError(ERROR_MESSAGES.REMINDER_NOT_FOUND, 404);
     return { message: "Reminder deleted successfully" };
   },
 };
+
+export default ReminderService;
