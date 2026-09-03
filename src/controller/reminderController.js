@@ -20,7 +20,7 @@ export const ReminderController = {
     }
   },
 
-  async getReminderById(req, res) {
+  async getReminderById(req, res, next) {
     try {
       const reminderId = parseInt(req.params.id, 10);
       const userId = req.user?.id || 1; // Replace with actual auth later
@@ -30,7 +30,7 @@ export const ReminderController = {
       );
       res.status(200).json(reminder);
     } catch (error) {
-      res.status(404).json({ message: error.message });
+      next(error);
     }
   },
 
