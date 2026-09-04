@@ -1,12 +1,13 @@
 import express from "express";
 import cors from "cors";
-import authRoutes from "./routes/authRoutes.js";
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
 import pinoHttp from 'pino-http';
-import reminderRoutes from "./routes/reminderRoutes.js";
-import errorHandlerMiddleware from "./middlewares/errorHandlerMiddleware.js";
+
+import authRoutes from "../routes/authRoutes.js";
+import reminderRoutes from "../routes/reminderRoutes.js";
+import errorHandlerMiddleware from "../middlewares/errorHandlerMiddleware.js";
 
 const app = express();
 // const PORT = process.env.PORT || 3000;
