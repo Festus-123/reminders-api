@@ -4,7 +4,7 @@
   "description": "A simple Api built for a reminder app",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest --run --env-file=.env",
     "start": "node --env-file=.env src/index.js",
     "dev": "nodemon --env-file=.env src/index.js"
   },
