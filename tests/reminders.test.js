@@ -14,15 +14,23 @@ describe("Reminders API", () => {
         password: "password123",
       });
 
-// Log response if status isn't 201/200 to catch payload shape or DB errors
-  if (!signupRes.body.accessToken && !signupRes.body.token) {
-    console.error("Signup failed during test setup:", signupRes.status, signupRes.body);
-  }
+    // Log response if status isn't 201/200 to catch payload shape or DB errors
+    if (!signupRes.body.accessToken && !signupRes.body.token) {
+      console.error(
+        "Signup failed during test setup:",
+        signupRes.status,
+        signupRes.body,
+      );
+    }
 
-  // Adjust property access if your response uses .token or .data.token
-  accessToken = signupRes.body.accessToken || signupRes.body.token || signupRes.body.data?.accessToken || signupRes.accessToken;
+    // Adjust property access if your response uses .token or .data.token
+    accessToken =
+      signupRes.body.accessToken ||
+      signupRes.body.token ||
+      signupRes.body.data?.accessToken ||
+      signupRes.accessToken;
 
-  expect(accessToken).toBeDefined();
+    expect(accessToken).toBeDefined();
   });
 
   it("reject user with wrong password", async () => {
@@ -67,8 +75,16 @@ describe("Reminders API", () => {
   });
 
   it("it updates a reminer", async () => {
+    // Create a reminder first to get a valid ID for this user
+    const created = await request(app)
+      .post("/api/v1/reminders")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ title: "Initial title", notes: "Note" });
+
+    const reminderId = created.body.id || created.body.data?.id;
+
     const updateRes = await request(app)
-      .patch("/api/v1/reminders/1")
+      .patch(`/api/v1/reminders/${reminderId}`)
       .set("Authorization", `Bearer ${accessToken}`)
       .send({ title: "Updated title" });
 
@@ -77,8 +93,30 @@ describe("Reminders API", () => {
   });
 
   it("it dosen't permit deleting a reminder that doesn't belong to the user", async () => {
+    // 1. Create a second user
+    const user2Res = await request(app)
+      .post("/api/v1/auth/signup")
+      .send({
+        email: `other-${Date.now()}@example.com`,
+        password: "password123",
+      });
+
+    const user2Token =
+      user2Res.body.accessToken ||
+      user2Res.body.token ||
+      user2Res.body.data?.accessToken;
+
+    // 2. Create a reminder owned by user 2
+    const user2Reminder = await request(app)
+      .post("/api/v1/reminders")
+      .set("Authorization", `Bearer ${user2Token}`)
+      .send({ title: "User 2 Private Reminder" });
+
+    const targetId = user2Reminder.body.id || user2Reminder.body.data?.id;
+
+    // 3. Try deleting user 2's reminder using user 1's accessToken
     const deleteRes = await request(app)
-      .delete("/api/v1/reminders/9999")
+      .delete(`/api/v1/reminders/${targetId}`)
       .set("Authorization", `Bearer ${accessToken}`);
 
     expect(deleteRes.status).toBe(403);
