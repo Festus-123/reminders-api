@@ -19,8 +19,8 @@ async function getPgVersion() {
 }
 
 // Call inside a safe block or remove top-level invocation in production
-if (process.env.NODE_ENV !== "production") {
-  getPgVersion();
-}
+// if (process.env.NODE_ENV !== "production") {
+//   getPgVersion();
+// }
 
 export default pool;
