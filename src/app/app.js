@@ -12,7 +12,13 @@ import errorHandlerMiddleware from "../middlewares/errorHandlerMiddleware.js";
 const app = express();
 // const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// Allow all origins (or configure specifically for your mobile app)
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 app.use(express.json());
 
 app.use(helmet()); // sets a batch of sensible security-related HTTP headers
