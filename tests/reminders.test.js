@@ -13,7 +13,16 @@ describe("Reminders API", () => {
         email: `test-${Date.now()}@example.com`,
         password: "password123",
       });
-    accessToken = signupRes.body.accessToken;
+
+// Log response if status isn't 201/200 to catch payload shape or DB errors
+  if (!signupRes.body.accessToken && !signupRes.body.token) {
+    console.error("Signup failed during test setup:", signupRes.status, signupRes.body);
+  }
+
+  // Adjust property access if your response uses .token or .data.token
+  accessToken = signupRes.body.accessToken || signupRes.body.token || signupRes.body.data?.accessToken || signupRes.accessToken;
+
+  expect(accessToken).toBeDefined();
   });
 
   it("reject user with wrong password", async () => {
