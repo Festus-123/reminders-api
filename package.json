@@ -4,7 +4,7 @@
   "description": "A simple Api built for a reminder app",
   "main": "index.js",
   "scripts": {
-    "test": "vitest --run --env-file=.env",
+    "test": "vitest run",
     "start": "node --env-file=.env src/index.js",
     "dev": "nodemon --env-file=.env src/index.js"
   },
@@ -17,10 +17,15 @@
     "cheerio": "^1.1.2",
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.12.0",
     "node-fetch": "^3.3.2",
     "nodemon": "^3.1.11",
     "pg": "^8.23.0",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0",
     "qs": "^6.14.0",
     "zod": "^4.5.4"
   },
